@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.services import portfolio
 
 router = APIRouter(prefix="/holdings", tags=["holdings"])
 
@@ -16,9 +17,23 @@ def create_holding(holding: schemas.HoldingCreate, db: Session = Depends(get_db)
     return db_holding
 
 
-@router.get("", response_model=list[schemas.HoldingRead])
-def list_holdings(db: Session = Depends(get_db)):
-    return db.query(models.Holding).order_by(models.Holding.created_at).all()
+@router.get("", response_model=list[schemas.HoldingWithValue])
+async def list_holdings(db: Session = Depends(get_db)):
+    enriched = await portfolio.get_enriched_holdings(db)
+    return [
+        schemas.HoldingWithValue(
+            id=e.holding.id,
+            ticker=e.holding.ticker,
+            quantity=e.holding.quantity,
+            buy_price=e.holding.buy_price,
+            created_at=e.holding.created_at,
+            current_price=e.current_price,
+            market_value=e.market_value,
+            gain_loss=e.gain_loss,
+            gain_loss_pct=e.gain_loss_pct,
+        )
+        for e in enriched
+    ]
 
 
 @router.delete("/{holding_id}", status_code=204)

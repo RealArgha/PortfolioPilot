@@ -13,7 +13,7 @@ Single-user MVP — no auth/accounts, no real brokerage integration.
 2. The backend fetches live prices from Finnhub and computes allocation,
    gain/loss, and portfolio value.
 3. On demand, a hand-rolled tool-calling loop sends the portfolio to Groq's
-   `llama-3.3-70b-versatile`. The model can call two local tools —
+   `openai/gpt-oss-120b`. The model can call two local tools —
    `get_portfolio_allocation()` and `search_news(ticker)` — before returning
    a structured JSON risk analysis.
 4. That analysis is validated (Pydantic) and exported to `.xlsx` / `.pptx`.
@@ -30,7 +30,7 @@ easy to read and explain end-to-end.
 | Backend | FastAPI (Python, async) |
 | Database | PostgreSQL via [Neon](https://neon.tech) (free tier, scale-to-zero) |
 | ORM | SQLAlchemy |
-| LLM | [Groq](https://console.groq.com) — `llama-3.3-70b-versatile`, OpenAI-compatible API |
+| LLM | [Groq](https://console.groq.com) — `openai/gpt-oss-120b`, OpenAI-compatible API |
 | Market data | [Finnhub](https://finnhub.io) — quotes + company news |
 | Excel export | `openpyxl` |
 | PPTX export | `python-pptx` |
@@ -43,7 +43,7 @@ Full design rationale and API reference: [`docs/SPEC.md`](docs/SPEC.md).
 
 - [x] DB models + FastAPI CRUD for holdings
 - [x] Finnhub integration → `/portfolio/summary`, live pricing on `/holdings`
-- [x] Hand-rolled Groq tool-calling loop (verified against a mocked client)
+- [x] Hand-rolled Groq tool-calling loop (verified end-to-end against real Groq/Finnhub/Neon)
 - [ ] Excel + PPTX generators, `/agent/analyze` + `/agent/runs/{id}` endpoints
 - [ ] React dashboard
 - [ ] Deploy (Render + Vercel + Neon)

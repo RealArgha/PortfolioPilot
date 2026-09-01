@@ -2,7 +2,6 @@ import asyncio
 import json
 import os
 import time
-from decimal import Decimal
 
 from openai import OpenAI, RateLimitError
 from pydantic import BaseModel
@@ -74,9 +73,6 @@ def get_client() -> OpenAI:
 
 async def _tool_get_portfolio_allocation(db: Session) -> dict:
     enriched = await portfolio.get_enriched_holdings(db)
-    total_market_value = sum(
-        (e.market_value for e in enriched if e.market_value is not None), Decimal("0")
-    )
     return {
         "holdings": [
             {
@@ -85,11 +81,7 @@ async def _tool_get_portfolio_allocation(db: Session) -> dict:
                 "buy_price": str(e.holding.buy_price),
                 "current_price": str(e.current_price) if e.current_price is not None else None,
                 "gain_loss_pct": str(e.gain_loss_pct) if e.gain_loss_pct is not None else None,
-                "allocation_pct": (
-                    str(e.market_value / total_market_value * 100)
-                    if e.market_value is not None and total_market_value > 0
-                    else None
-                ),
+                "allocation_pct": str(e.allocation_pct) if e.allocation_pct is not None else None,
             }
             for e in enriched
         ]

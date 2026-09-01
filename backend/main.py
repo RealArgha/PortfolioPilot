@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import holdings, portfolio
+from app.routers import agent, holdings, portfolio
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,6 +17,7 @@ app.add_middleware(
 
 app.include_router(holdings.router)
 app.include_router(portfolio.router)
+app.include_router(agent.router)
 
 
 @app.get("/health")

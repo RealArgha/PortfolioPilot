@@ -34,11 +34,7 @@ async def portfolio_summary(db: Session = Depends(get_db)):
             market_value=e.market_value,
             gain_loss=e.gain_loss,
             gain_loss_pct=e.gain_loss_pct,
-            allocation_pct=(
-                e.market_value / total_market_value * 100
-                if e.market_value is not None and total_market_value > 0
-                else None
-            ),
+            allocation_pct=e.allocation_pct,
         )
         for e in enriched
     ]

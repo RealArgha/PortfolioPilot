@@ -61,3 +61,15 @@ class PortfolioSummary(BaseModel):
     total_gain_loss: Decimal
     total_gain_loss_pct: Decimal | None
     holdings: list[HoldingSummary]
+
+
+class AgentRunRead(BaseModel):
+    id: int
+    status: str
+    summary: str | None = None
+    started_at: datetime
+    completed_at: datetime | None = None
+    excel_url: str | None = None
+    pptx_url: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)

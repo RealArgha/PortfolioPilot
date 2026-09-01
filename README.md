@@ -44,7 +44,7 @@ Full design rationale and API reference: [`docs/SPEC.md`](docs/SPEC.md).
 - [x] DB models + FastAPI CRUD for holdings
 - [x] Finnhub integration → `/portfolio/summary`, live pricing on `/holdings`
 - [x] Hand-rolled Groq tool-calling loop (verified end-to-end against real Groq/Finnhub/Neon)
-- [ ] Excel + PPTX generators, `/agent/analyze` + `/agent/runs/{id}` endpoints
+- [x] Excel + PPTX generators, `/agent/analyze` + `/agent/runs/{id}` endpoints
 - [ ] React dashboard
 - [ ] Deploy (Render + Vercel + Neon)
 - [ ] Demo recording
@@ -61,10 +61,12 @@ backend/
     routers/
       holdings.py              # POST/GET/DELETE /holdings
       portfolio.py             # GET /portfolio/summary
+      agent.py                  # POST /agent/analyze, GET /agent/runs/{id}(/excel|/pptx)
     services/
       finnhub.py                # quotes + company news client
       portfolio.py               # valuation/allocation logic (shared)
       agent.py                   # Groq tool-calling loop
+      exports.py                 # Excel/PPTX generation from AgentAnalysis
 docs/
   SPEC.md                     # full technical spec
 ```
@@ -104,10 +106,10 @@ the same SQLAlchemy models work against either.
 | `DELETE` | `/holdings/{id}` | Remove a holding |
 | `GET` | `/portfolio/summary` | Total value, allocation %, gain/loss |
 | `GET` | `/portfolio/history` | Daily snapshot series *(planned)* |
-| `POST` | `/agent/analyze` | Trigger an agent run *(planned)* |
-| `GET` | `/agent/runs/{id}` | Poll run status / get download links *(planned)* |
-| `GET` | `/agent/runs/{id}/excel` | Download the generated `.xlsx` *(planned)* |
-| `GET` | `/agent/runs/{id}/pptx` | Download the generated `.pptx` *(planned)* |
+| `POST` | `/agent/analyze` | Trigger an agent run — returns the run id immediately, runs in the background |
+| `GET` | `/agent/runs/{id}` | Poll run status; returns `excel_url`/`pptx_url` once done |
+| `GET` | `/agent/runs/{id}/excel` | Download the generated `.xlsx` |
+| `GET` | `/agent/runs/{id}/pptx` | Download the generated `.pptx` |
 
 ## Deployment
 

@@ -45,7 +45,7 @@ Full design rationale and API reference: [`docs/SPEC.md`](docs/SPEC.md).
 - [x] Finnhub integration → `/portfolio/summary`, live pricing on `/holdings`
 - [x] Hand-rolled Groq tool-calling loop (verified end-to-end against real Groq/Finnhub/Neon)
 - [x] Excel + PPTX generators, `/agent/analyze` + `/agent/runs/{id}` endpoints
-- [ ] React dashboard
+- [x] React dashboard (`/`, `/holdings`, `/analyze`)
 - [ ] Deploy (Render + Vercel + Neon)
 - [ ] Demo recording
 
@@ -67,6 +67,12 @@ backend/
       portfolio.py               # valuation/allocation logic (shared)
       agent.py                   # Groq tool-calling loop
       exports.py                 # Excel/PPTX generation from AgentAnalysis
+frontend/
+  src/
+    api.js                     # fetch wrapper, base URL from VITE_API_URL
+    App.jsx                    # routes + nav
+    pages/                     # Dashboard, Holdings, Analyze
+    components/                # HoldingsTable, AllocationPieChart, PerformanceLineChart
 docs/
   SPEC.md                     # full technical spec
 ```
@@ -97,6 +103,15 @@ DATABASE_URL=       # postgresql://... from your Neon project
 (`sqlite:///./dev.db`) for quick testing without a real Postgres instance —
 the same SQLAlchemy models work against either.
 
+## Running the frontend locally
+
+```bash
+cd frontend
+npm install
+cp .env.example .env   # VITE_API_URL, defaults to http://localhost:8000
+npm run dev
+```
+
 ## API endpoints
 
 | Method | Path | Purpose |
@@ -105,7 +120,7 @@ the same SQLAlchemy models work against either.
 | `GET` | `/holdings` | List holdings with live price, market value, gain/loss |
 | `DELETE` | `/holdings/{id}` | Remove a holding |
 | `GET` | `/portfolio/summary` | Total value, allocation %, gain/loss |
-| `GET` | `/portfolio/history` | Daily snapshot series *(planned)* |
+| `GET` | `/portfolio/history` | Daily total-value series (snapshots recorded as a side effect of `/portfolio/summary`) |
 | `POST` | `/agent/analyze` | Trigger an agent run — returns the run id immediately, runs in the background |
 | `GET` | `/agent/runs/{id}` | Poll run status; returns `excel_url`/`pptx_url` once done |
 | `GET` | `/agent/runs/{id}/excel` | Download the generated `.xlsx` |

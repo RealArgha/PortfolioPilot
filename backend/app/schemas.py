@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -61,6 +61,11 @@ class PortfolioSummary(BaseModel):
     total_gain_loss: Decimal
     total_gain_loss_pct: Decimal | None
     holdings: list[HoldingSummary]
+
+
+class PortfolioHistoryPoint(BaseModel):
+    date: date
+    total_value: Decimal
 
 
 class AgentRunRead(BaseModel):

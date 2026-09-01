@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -54,3 +55,58 @@ async def get_enriched_holdings(db: Session) -> list[EnrichedHolding]:
             )
         )
     return enriched
+
+
+def record_daily_snapshots(db: Session, enriched: list[EnrichedHolding]) -> None:
+    """Upsert today's price for each held ticker into price_snapshots.
+
+    Called as a side effect of normal dashboard usage (no cron needed for
+    the MVP) so /portfolio/history has real data to show once a user has
+    opened the dashboard on more than one day.
+    """
+    today = date.today()
+    seen_tickers: set[str] = set()
+    for e in enriched:
+        ticker = e.holding.ticker
+        if e.current_price is None or ticker in seen_tickers:
+            continue
+        seen_tickers.add(ticker)
+
+        existing = (
+            db.query(models.PriceSnapshot)
+            .filter(models.PriceSnapshot.ticker == ticker, models.PriceSnapshot.snapshot_date == today)
+            .first()
+        )
+        if existing:
+            existing.price = e.current_price
+        else:
+            db.add(models.PriceSnapshot(ticker=ticker, price=e.current_price, snapshot_date=today))
+    db.commit()
+
+
+def get_history(db: Session) -> list[tuple[date, Decimal]]:
+    """Total portfolio value per date, using *current* holdings' quantities
+    against each date's stored snapshot price. Doesn't account for holdings
+    added/removed over time — an acceptable approximation for the MVP.
+    """
+    holdings = db.query(models.Holding).all()
+    qty_by_ticker: dict[str, Decimal] = {}
+    for h in holdings:
+        qty_by_ticker[h.ticker] = qty_by_ticker.get(h.ticker, Decimal("0")) + h.quantity
+
+    if not qty_by_ticker:
+        return []
+
+    snapshots = (
+        db.query(models.PriceSnapshot)
+        .filter(models.PriceSnapshot.ticker.in_(qty_by_ticker.keys()))
+        .order_by(models.PriceSnapshot.snapshot_date)
+        .all()
+    )
+
+    totals: dict[date, Decimal] = {}
+    for snap in snapshots:
+        qty = qty_by_ticker[snap.ticker]
+        totals[snap.snapshot_date] = totals.get(snap.snapshot_date, Decimal("0")) + qty * snap.price
+
+    return sorted(totals.items())

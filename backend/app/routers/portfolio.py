@@ -13,6 +13,7 @@ router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 @router.get("/summary", response_model=schemas.PortfolioSummary)
 async def portfolio_summary(db: Session = Depends(get_db)):
     enriched = await portfolio.get_enriched_holdings(db)
+    portfolio.record_daily_snapshots(db, enriched)
 
     total_cost_basis = sum((e.cost_basis for e in enriched), Decimal("0"))
     total_market_value = sum(
@@ -46,3 +47,11 @@ async def portfolio_summary(db: Session = Depends(get_db)):
         total_gain_loss_pct=total_gain_loss_pct,
         holdings=holdings_summary,
     )
+
+
+@router.get("/history", response_model=list[schemas.PortfolioHistoryPoint])
+def portfolio_history(db: Session = Depends(get_db)):
+    return [
+        schemas.PortfolioHistoryPoint(date=snapshot_date, total_value=total_value)
+        for snapshot_date, total_value in portfolio.get_history(db)
+    ]

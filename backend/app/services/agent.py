@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.services import finnhub, portfolio
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-120b"
 MAX_TOOL_ITERATIONS = 6
 
 SYSTEM_PROMPT = """You are a portfolio risk analyst. You have two tools: \
